@@ -74,6 +74,31 @@ PUB ClockDataOk{}: flag
     pollrtc{}
     return _clkdata_ok == 0
 
+PUB ClockOutFreq(freq): curr_freq
+' Set frequency of SQW pin, in Hz
+'   Valid values: 0, 1, 1024, 4096, 8192
+'   Any other value polls the chip and returns the current setting
+    curr_freq := 0
+    readreg(core#CONTROL, 1, @curr_freq)
+    case freq
+        0:
+            freq |= (1 << core#INTCN)           ' turn on interrupt output
+            freq := (curr_freq & core#BBSQW_MASK)   ' Turn off clock output
+        1, 1024, 4096, 8192:
+            curr_freq &= core#INTCN_MASK        ' turn off interrupt output
+            freq := lookdownz(freq: 1, 1024, 4096, 8192) << core#RS
+            freq |= (1 << core#BBSQW)           ' turn on clock output
+        other:
+            case (curr_freq >> core#BBSQW) & 1
+                0:                              ' if square wave output is
+                    return 0                    ' disabled, return 0
+                1:
+                    curr_freq := (curr_freq >> core#RS) & core#RS_BITS
+                    return lookupz(curr_freq: 1, 1024, 4096, 8192)
+
+    freq := ((curr_freq & core#RS_MASK) | freq) & core#CONTROL_MASK
+    writereg(core#CONTROL, 1, @freq)
+
 PUB Date(ptr_date)
 
 PUB Day(d): day_now
