@@ -38,6 +38,6 @@ P1/SPIN1:
 - [ ] Add support for interrupts
 - [x] Add support for oscillator control
 - [x] Add support for oscillator stop flag
-- [ ] Add support for oscillator aging offset
+- [x] Add support for oscillator aging offset
 - [ ] Add support for pure-SPIN I2C engine
 - [ ] Port to P2/SPIN2
