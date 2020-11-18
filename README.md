@@ -33,7 +33,7 @@ P1/SPIN1:
 ## TODO
 
 - [ ] Add support for setting square wave output freq
-- [ ] Add support for reading on-chip temperature sensor
+- [x] Add support for reading on-chip temperature sensor
 - [ ] Add support for interrupts
 - [ ] Add support for oscillator control
 - [ ] Add support for oscillator stop flag

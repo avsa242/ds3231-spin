@@ -12,18 +12,22 @@
 
 CON
 
-    SLAVE_WR          = core#SLAVE_ADDR
-    SLAVE_RD          = core#SLAVE_ADDR|1
+    SLAVE_WR            = core#SLAVE_ADDR
+    SLAVE_RD            = core#SLAVE_ADDR|1
 
-    DEF_SCL           = 28
-    DEF_SDA           = 29
-    DEF_HZ            = 100_000
-    I2C_MAX_FREQ      = core#I2C_MAX_FREQ
+    DEF_SCL             = 28
+    DEF_SDA             = 29
+    DEF_HZ              = 100_000
+    I2C_MAX_FREQ        = core#I2C_MAX_FREQ
+
+    C                   = 0
+    F                   = 1
 
 VAR
 
     byte _secs, _mins, _hours                   ' Vars to hold time
     byte _wkdays, _days, _months, _years        ' Order is important!
+    byte _temp_scale
 
 OBJ
 
@@ -117,6 +121,42 @@ PUB Seconds(second): curr_sec
         other:
             return bcd2int(_secs & core#SECONDS_MASK)
 
+PUB TempData{}: temp
+' Temperature ADC data
+    readreg(core#TEMP_MSB, 2, @temp)
+
+PUB TempDataReady{}: flag
+' Flag indicating temperature data ready
+    readreg(core#CONTROL, 1, @flag)
+    return ((flag >> core#CONV) & 1) == 0
+
+PUB Temperature{}: temp_cal
+' Read temperature
+'   Returns: Temperature in hundredths of a degree, in chosen scale
+'   Example: 2075 == 20.75C
+    return calctemp(tempdata{})
+
+PUB TempMeasure{} | tmp, meas
+' Perform a manual temperature measurement
+'   NOTE: The RTC automatically performs temperature measurements
+'       every 64 seconds
+    readreg(core#CONTROL, 1, @tmp)
+    tmp |= (1 << core#CONV)                     ' set bit to trigger measurement
+
+    writereg(core#CONTROL, 1, @tmp)
+
+PUB TempScale(scale): curr_scl
+' Set temperature scale used by Temperature method
+'   Valid values:
+'      *C (0): Celsius
+'       F (1): Fahrenheit
+'   Any other value returns the current setting
+    case scale
+        C, F:
+            _temp_scale := scale
+        other:
+            return _temp_scale
+
 PUB Weekday(wkday): curr_wkday
 ' Set day of week
 '   Valid values: 1..7
@@ -146,6 +186,18 @@ PRI bcd2int(bcd): int
 ' Convert BCD (Binary Coded Decimal) to integer
     return ((bcd >> 4) * 10) + (bcd // 16)
 
+PRI calcTemp(temp_word): temp_cal
+' Calculate temperature, using temperature word
+'   Returns: temperature, in hundredths of a degree, in chosen scale
+    temp_cal := (temp_word >> 6) * 0_25
+    case _temp_scale
+        C:
+            return
+        F:
+            return ((temp_cal * 90) / 50) + 32_00
+        other:
+            return FALSE
+
 PRI int2bcd(int): bcd
 ' Convert integer to BCD (Binary Coded Decimal)
     return ((int / 10) << 4) + (int // 10)
@@ -153,7 +205,7 @@ PRI int2bcd(int): bcd
 PUB readReg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt, tmp
 ' Read nr_bytes from device into ptr_buff
     case reg_nr
-        core#SECONDS..core#TEMP_MSB:
+        core#SECONDS..core#AGE_OFFS:
             cmd_pkt.byte[0] := SLAVE_WR
             cmd_pkt.byte[1] := reg_nr
             i2c.start{}
@@ -162,6 +214,9 @@ PUB readReg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt, tmp
             i2c.write(SLAVE_RD)
             i2c.rd_block(ptr_buff, nr_bytes, TRUE)
             i2c.stop{}
+        core#TEMP_MSB:
+            repeat tmp from nr_bytes-1 to 0
+                byte[ptr_buff][tmp] := i2c.read(tmp == 0)
         other:
             return
 

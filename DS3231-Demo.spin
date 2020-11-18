@@ -42,7 +42,7 @@ PUB Main{} | wkday, month, day, yr
 
 ' Uncomment below to set date/time
 '                hh, mm, ss, MMM, DD, WKDAY, YY
-'    setdatetime(08, 51, 00, NOV, 18, WED, 20)
+'    setdatetime(14, 26, 00, NOV, 18, WED, 20)
 
     repeat{}
         rtc.pollrtc{}                       ' read RTC into hub RAM
