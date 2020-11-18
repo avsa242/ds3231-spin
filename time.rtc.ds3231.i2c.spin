@@ -137,6 +137,22 @@ PUB OscEnabled(state): curr_state
     state := ((curr_state & core#EOSC_MASK) | state) & core#CONTROL_MASK
     writereg(core#CONTROL, 1, @state)
 
+PUB OscOffset(offs): curr_offs
+' Set oscillator aging offset, in 100's of ppb
+'   Valid values: -128 to 127
+'   Any other value polls the chip and returns the current setting
+'   NOTE: This setting is specified at a temperature of +25C, typ
+'   NOTE: The effects of this setting can be observed at the
+'       32kHz output. To effect changes immediately, trigger a
+'       temperature conversion using TempMeasure()
+    case offs
+        -127..128:
+            writereg(core#AGE_OFFS, 1, @offs)
+        other:
+            curr_offs := 0
+            readreg(core#AGE_OFFS, 1, @curr_offs)
+            return ~curr_offs
+
 PUB PollRTC{}
 ' Read the time data from the RTC and store it in hub RAM
     readreg(core#SECONDS, 7, @_secs)
