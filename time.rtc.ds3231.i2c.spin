@@ -106,6 +106,23 @@ PUB Month(mon): curr_month
         other:
             return bcd2int(_months & core#MONTH_MASK)
 
+PUB OscEnabled(state): curr_state
+' Enable the on-chip oscillator
+'   Valid values: TRUE (-1 or 1), FALSE (0)
+'   Any other value polls the chip and returns the current setting
+'   NOTE: This setting only takes effect when the RTC is powered
+'       by Vbat. When powered by Vcc, the oscillator is always on
+    curr_state := 0
+    readreg(core#CONTROL, 1, @curr_state)
+    case ||(state)
+        0, 1:
+            state := ||(state) << core#EOSC
+        other:
+            return ((curr_state >> core#EOSC) & 1) == 1
+
+    state := ((curr_state & core#EOSC_MASK) | state) & core#CONTROL_MASK
+    writereg(core#CONTROL, 1, @state)
+
 PUB PollRTC{}
 ' Read the time data from the RTC and store it in hub RAM
     readreg(core#SECONDS, 7, @_secs)
