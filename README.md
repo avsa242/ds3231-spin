@@ -14,6 +14,7 @@ This is a P8X32A/Propeller, ~~P2X8C4M64P/Propeller 2~~ driver object for the DS3
 
 P1/SPIN1:
 * spin-standard-library
+* 1 extra core/cog for the PASM I2C engine
 
 ~~P2/SPIN2:~~
 * ~~p2-spin-standard-library~~
@@ -35,7 +36,8 @@ P1/SPIN1:
 - [ ] Add support for setting square wave output freq
 - [x] Add support for reading on-chip temperature sensor
 - [ ] Add support for interrupts
-- [ ] Add support for oscillator control
-- [ ] Add support for oscillator stop flag
+- [x] Add support for oscillator control
+- [x] Add support for oscillator stop flag
 - [ ] Add support for oscillator aging offset
+- [ ] Add support for pure-SPIN I2C engine
 - [ ] Port to P2/SPIN2

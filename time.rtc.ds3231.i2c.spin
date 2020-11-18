@@ -28,6 +28,7 @@ VAR
     byte _secs, _mins, _hours                   ' Vars to hold time
     byte _wkdays, _days, _months, _years        ' Order is important!
     byte _temp_scale
+    byte _clkdata_ok
 
 OBJ
 
@@ -59,6 +60,19 @@ PUB Stop{}
 
 PUB Defaults{}
 ' Set factory defaults
+
+PUB ClockDataOk{}: flag
+' Flag indicating battery voltage ok/clock data integrity ok
+'   Returns:
+'       TRUE (-1): Clock data integrity guaranteed
+'       FALSE (0): Clock data integrity not guaranteed
+'   Possible reasons for this flag to be FALSE:
+'       1. First power-on
+'       2. Vcc and Vbat are too low for the clock to operate
+'       3. The oscillator has been manually powered off using OscEnabled()
+'       4. External influences on the RTC crystal
+    pollrtc{}
+    return _clkdata_ok == 0
 
 PUB Date(ptr_date)
 
@@ -126,6 +140,17 @@ PUB OscEnabled(state): curr_state
 PUB PollRTC{}
 ' Read the time data from the RTC and store it in hub RAM
     readreg(core#SECONDS, 7, @_secs)
+    readreg(core#CTRL_STAT, 1, @_clkdata_ok)
+    _clkdata_ok := (_clkdata_ok >> core#OSF) & 1
+
+PUB Reset{} | tmp
+' Reset the device
+'   NOTE: This is used to clear the oscillator stopped flag, readable using
+'       ClockDataOk()
+    tmp := 0
+    readreg(core#CTRL_STAT, 1, @tmp)
+    tmp &= core#OSF_MASK                        ' turn off the
+    writereg(core#CTRL_STAT, 1, @tmp)           '   "oscillator-stopped" flag
 
 PUB Seconds(second): curr_sec
 ' Set seconds
@@ -195,9 +220,6 @@ PUB Year(yr): curr_yr
             writereg(core#YEAR, 1, @yr)
         other:
             return bcd2int(_years & core#YEAR_MASK)
-
-PUB Reset{}
-' Reset the device
 
 PRI bcd2int(bcd): int
 ' Convert BCD (Binary Coded Decimal) to integer
