@@ -5,7 +5,7 @@
     Description: Driver for the DS3231 Real-Time Clock
     Copyright (c) 2020
     Started Nov 17, 2020
-    Updated Nov 18, 2020
+    Updated Nov 19, 2020
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -22,6 +22,14 @@ CON
 
     C                   = 0
     F                   = 1
+
+' Alarm1Rate() settings
+    ALM_1HZ             = 15
+    ALM_SS              = 14
+    ALM_MMSS            = 12
+    ALM_HHMMSS          = 8
+    ALM_DDHHMMSS        = 0
+    ALM_WKDHHMMSS       = 16
 
 VAR
 
@@ -60,6 +68,116 @@ PUB Stop{}
 
 PUB Defaults{}
 ' Set factory defaults
+
+PUB Alarm1Day(d): curr_day
+' Set alarm #1 day
+'   Valid values: 1..31
+'   Any other value returns the current day of the month
+    readreg(core#ALM1_DAYDATE, 1, @curr_day)
+    case d
+        1..31:
+            curr_day &= core#ALMX_SET           ' preserve alarm bit
+            d := int2bcd(d)                     ' day and weekday alarms share
+            d |= curr_day                       ' the same reg; not setting
+            writereg(core#ALM1_DAYDATE, 1, @d)  ' bit 6 means this is a day of
+        other:                                  '   the month
+            return bcd2int(curr_day & core#DATE_MASK)
+
+PUB Alarm1Hours(h): curr_hr
+' Set alarm #1 hours
+'   Valid values: 0..23
+'   Any other value returns the current second
+    readreg(core#ALM1_HR, 1, @curr_hr)
+    case h
+        0..23:
+            curr_hr &= core#ALMX_SET
+            h := int2bcd(h)
+            h |= curr_hr
+            writereg(core#ALM1_HR, 1, @h)
+        other:
+            return bcd2int(curr_hr & core#HOURS_MASK)
+
+PUB Alarm1Minutes(m): curr_min
+' Set alarm #1 minutes
+'   Valid values: 0..59
+'   Any other value returns the current second
+    readreg(core#ALM1_MIN, 1, @curr_min)
+    case m
+        0..59:
+            curr_min &= core#ALMX_SET
+            m := int2bcd(m)
+            m |= curr_min                       ' preserve alarm bit
+            writereg(core#ALM1_MIN, 1, @m)
+        other:
+            return bcd2int(curr_min & core#MINUTES_MASK)
+
+PUB Alarm1Rate(rate): curr_rate | a1m[4], tmp
+' Rate of alarm repetition
+'   Valid values:
+'       ALM_1HZ(15): alarm once per second
+'       ALM_SS(14): when seconds match
+'       ALM_MMSS(12): when minutes and seconds match
+'       ALM_HHMMSS(8): when hours, minutes and seconds match
+'       ALM_DDHHMMSS(0): when date, hours, minutes and seconds match
+'       ALM_WKDHHMMSS(16): when weekday, hours, minutes and seconds match
+    longfill(@a1m, 0, 5)
+    case rate
+        0, 8, 12, 14, 15:
+            ' The MSB of each alarm reg (seconds .. day/date) forms part of a
+            '   5-bit alarm repetition setting. The 5th bit is the day/date bit
+            ' Read in each alarm reg, set or clear the repetition bit/MSB based
+            '   on the rate this method was called with
+            repeat tmp from 0 to 3
+                readreg(core#ALM1_SEC + tmp, 1, @a1m[tmp])
+                if tmp == 3                     ' if this is the day/date reg,
+                    a1m[tmp] &= core#DYDT_MASK  '   clear day/date bit (= date)
+                a1m[tmp] &= core#ALMX_MASK      ' clear the existing A1Mx bit
+
+                ' update the alarm bit and write the updated reg. back
+                a1m[tmp] |= ((rate >> tmp) & 1) << core#ALMX
+                writereg(core#ALM1_SEC + tmp, 1, @a1m[tmp])
+        16:
+            repeat tmp from 0 to 3
+                readreg(core#ALM1_SEC + tmp, 1, @a1m[tmp])
+                if tmp == 3
+                    a1m[tmp] |= core#ALM_DAY    ' set day/date bit (= day)
+                a1m[tmp] &= core#ALMX_MASK      ' clear the existing A1Mx bit
+                a1m[tmp] |= (((rate >> tmp) & 1)) << core#ALMX
+                writereg(core#ALM1_SEC + tmp, 1, @a1m[tmp])
+        other:
+            repeat tmp from 0 to 3
+                readreg(core#ALM1_SEC + tmp, 1, @a1m[tmp])
+                curr_rate |= ((a1m[tmp] >> core#ALMX) & 1) << tmp
+            curr_rate |= ((a1m[3] >> core#DYDT) & 1) << 4
+
+PUB Alarm1Seconds(s): curr_sec
+' Set alarm #1 seconds
+'   Valid values: 0..59
+'   Any other value returns the current second
+    readreg(core#ALM1_SEC, 1, @curr_sec)
+    case s
+        0..59:
+            curr_sec &= core#ALMX_SET           ' preserve alarm bit
+            s := int2bcd(s)
+            s |= curr_sec
+            writereg(core#ALM1_SEC, 1, @s)
+        other:
+            return bcd2int(curr_sec & core#SECONDS_MASK)
+
+PUB Alarm1Wkday(d): curr_wkday
+' Set alarm #1 week day
+'   Valid values: 1..7
+'   Any other value returns the current week day
+    readreg(core#ALM1_DAYDATE, 1, @curr_wkday)
+    case d
+        1..7:
+            curr_wkday &= core#ALMX_SET         ' preserve alarm bit
+            d := int2bcd(d)                     ' day and weekday alarms share
+            d |= core#ALM_DAY                   ' the same reg; indicate this
+            d |= curr_wkday                     ' preserve alarm bit
+            writereg(core#ALM1_DAYDATE, 1, @d)  ' is a weekday
+        other:
+            return bcd2int(curr_wkday & core#DAY_MASK)
 
 PUB ClockDataOk{}: flag
 ' Flag indicating battery voltage ok/clock data integrity ok
@@ -122,6 +240,40 @@ PUB Hours(hr): curr_hr
             writereg(core#HOURS, 1, @hr)
         other:
             return bcd2int(_hours & core#HOURS_MASK)
+
+PUB IntClear(mask) | tmp
+' Clear asserted interrupts
+    tmp := 0
+    readreg(core#CTRL_STAT, 1, @tmp)
+    case mask
+        %00..%11:                               ' ints clear
+            mask ^= core#AXF_BITS               ' ints clear when bits cleared
+        other:
+            return
+
+    tmp := ((tmp & core#AXF_MASK) | tmp) & core#CTRL_STAT_MASK
+    writereg(core#CTRL_STAT, 1, @tmp)
+
+PUB Interrupt{}: mask
+' Mask indicating one or more interrupts are asserted
+    readreg(core#CTRL_STAT, 1, @mask)
+    return (mask & core#AXF_BITS)
+
+PUB IntMask(mask): curr_mask
+' Set interrupt mask
+'   Bits %10
+'       1: Alarm 2 interrupt enable
+'       0: Alarm 1 interrupt enable
+'   Any other value polls the chip and returns the current setting
+    curr_mask := 0
+    readreg(core#CONTROL, 1, @curr_mask)
+    case mask
+        %00..%11:
+        other:
+            return (curr_mask & core#AIE_MASK)
+
+    mask := ((curr_mask & core#AIE_MASK) | mask) & core#CONTROL_MASK
+    writereg(core#CONTROL, 1, @mask)
 
 PUB Minutes(minute): curr_min
 ' Set minutes
@@ -282,7 +434,7 @@ PRI int2bcd(int): bcd
 ' Convert integer to BCD (Binary Coded Decimal)
     return ((int / 10) << 4) + (int // 10)
 
-PUB readReg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt, tmp
+PRI readReg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt, tmp
 ' Read nr_bytes from device into ptr_buff
     case reg_nr
         core#SECONDS..core#AGE_OFFS:

@@ -35,7 +35,7 @@ P1/SPIN1:
 
 - [x] Add support for setting square wave output freq
 - [x] Add support for reading on-chip temperature sensor
-- [ ] Add support for interrupts
+- [x] Add support for interrupts
 - [x] Add support for oscillator control
 - [x] Add support for oscillator stop flag
 - [x] Add support for oscillator aging offset

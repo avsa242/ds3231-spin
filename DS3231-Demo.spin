@@ -5,7 +5,7 @@
     Description: Demo of the DS3231 driver
     Copyright (c) 2020
     Started Nov 17, 2020
-    Updated Nov 18, 2020
+    Updated Nov 19, 2020
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -42,7 +42,7 @@ PUB Main{} | wkday, month, day, yr
 
 ' Uncomment below to set date/time
 '                hh, mm, ss, MMM, DD, WKDAY, YY
-'    setdatetime(15, 48, 00, NOV, 18, WED, 20)
+'    setdatetime(14, 03, 00, NOV, 19, THU, 20)
 
     repeat{}
         rtc.pollrtc{}                       ' read RTC into hub RAM
