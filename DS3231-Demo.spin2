@@ -12,15 +12,15 @@
 
 CON
 
-    _clkmode    = cfg#_clkmode
-    _xinfreq    = cfg#_xinfreq
+    _clkfreq    = cfg._clkfreq_def
+    _xtlfreq    = cfg._xtlfreq
 
 ' -- User-modifiable constants
-    SER_BAUD    = 115_200
-    LED         = cfg#LED1
+    SER_BAUD    = 2_000_000
+    LED         = cfg.LED1
 
-    I2C_SCL     = 28
-    I2C_SDA     = 29
+    I2C_SCL     = 8
+    I2C_SDA     = 9
     I2C_HZ      = 400_000
 ' --
 
@@ -30,37 +30,36 @@ CON
 
 OBJ
 
-    cfg     : "core.con.boardcfg.flip"
+    cfg     : "core.con.boardcfg.p2eval"
     ser     : "com.serial.terminal.ansi"
-    time    : "time"
     int     : "string.integer"
     rtc     : "time.rtc.ds3231.i2c"
 
-PUB Main{} | wkday, month, date, yr
+PUB Main() | wkday, month, date, yr
 
-    setup{}
+    setup()
 
 ' Uncomment below to set date/time
 '                hh, mm, ss, MMM, DD, WKDAY, YY
-'    setdatetime(19, 28, 00, MAR, 20, SAT, 21)
+'    setdatetime(19, 43, 00, MAR, 20, SAT, 21)
 
     repeat
-        rtc.pollrtc{}                       ' read RTC into hub RAM
+        rtc.pollrtc()                       ' read RTC into hub RAM
         ' get weekday and month name strings from DAT table below
-        wkday := @wkday_name[(rtc.weekday{} - 1) * 4]
-        month := @month_name[(rtc.month{} - 1) * 4]
-        date := int.deczeroed(rtc.date{}, 2)
-        yr := rtc.year{}
+        wkday := @wkday_name[(rtc.weekday() - 1) * 4]
+        month := @month_name[(rtc.month() - 1) * 4]
+        date := int.deczeroed(rtc.date(), 2)
+        yr := rtc.year()
 
         ser.position(0, 3)
         ser.str(wkday)
         ser.printf(string(" %s %s 20%d "), date, month, yr, 0, 0, 0)
 
-        ser.str(int.deczeroed(rtc.hours{}, 2))  ' Discrete statements
+        ser.str(int.deczeroed(rtc.hours(), 2))  ' Discrete statements
         ser.char(":")                           ' due to a bug in
-        ser.str(int.deczeroed(rtc.minutes{}, 2))' string.integer
+        ser.str(int.deczeroed(rtc.minutes(), 2))' string.integer
         ser.char(":")
-        ser.str(int.deczeroed(rtc.seconds{}, 2))
+        ser.str(int.deczeroed(rtc.seconds(), 2))
 
 PUB SetDateTime(h, m, s, mmm, dd, wkday, yy)
 
@@ -73,19 +72,19 @@ PUB SetDateTime(h, m, s, mmm, dd, wkday, yy)
     rtc.setweekday(wkday)                       ' 01..07
     rtc.setyear(yy)                             ' 00..99
 
-PUB Setup{}
+PUB Setup()
 
     ser.start(SER_BAUD)
-    time.msleep(30)
-    ser.clear{}
+    waitms(30)
+    ser.clear()
     ser.strln(string("Serial terminal started"))
     if rtc.startx(I2C_SCL, I2C_SDA, I2C_HZ)
         ser.strln(string("DS3231 driver started"))
     else
         ser.strln(string("DS3231 driver failed to start - halting"))
-        rtc.stop{}
-        time.msleep(50)
-        ser.stop{}
+        rtc.stop()
+        waitms(50)
+        repeat 
 
 DAT
 ' Tables for mapping numbers to weekday and month names
