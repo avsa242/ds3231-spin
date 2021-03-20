@@ -9,6 +9,7 @@ This is a P8X32A/Propeller, ~~P2X8C4M64P/Propeller 2~~ driver object for the DS3
 
 * I2C connection at up to 400kHz
 * Read and set days, hours, months, minutes, seconds, weekday, year (individually)
+* Read on-chip temperature sensor
 
 ## Requirements
 

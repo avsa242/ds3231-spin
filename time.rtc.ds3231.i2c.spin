@@ -219,29 +219,13 @@ PUB ClockOutFreq(freq): curr_freq
     freq := ((curr_freq & core#RS_MASK) | freq) & core#CONTROL_MASK
     writereg(core#CONTROL, 1, @freq)
 
-PUB Date(ptr_date)
+PUB Date{}: curr_date
+' Get current date/day of month
+    return bcd2int(_days & core#DATE_MASK)
 
-PUB Day(d): day_now
-' Set day of month
-'   Valid values: 1..31
-'   Any other value returns the current day
-    case d
-        1..31:
-            d := int2bcd(d)
-            writereg(core#DATE, 1, @d)
-        other:
-            return bcd2int(_days & core#DATE_MASK)
-
-PUB Hours(hr): curr_hr
-' Set hours
-'   Valid values: 0..23
-'   Any other value returns the current hour
-    case hr
-        0..23:
-            hr := int2bcd(hr)
-            writereg(core#HOURS, 1, @hr)
-        other:
-            return bcd2int(_hours & core#HOURS_MASK)
+PUB Hours{}: curr_hr
+' Get current hour
+    return bcd2int(_hours & core#HOURS_MASK)
 
 PUB IntClear(mask) | tmp
 ' Clear asserted interrupts
@@ -277,27 +261,13 @@ PUB IntMask(mask): curr_mask
     mask := ((curr_mask & core#AIE_MASK) | mask) & core#CONTROL_MASK
     writereg(core#CONTROL, 1, @mask)
 
-PUB Minutes(minute): curr_min
-' Set minutes
-'   Valid values: 0..59
-'   Any other value returns the current minute
-    case minute
-        0..59:
-            minute := int2bcd(minute)
-            writereg(core#MINUTES, 1, @minute)
-        other:
-            return bcd2int(_mins & core#MINUTES_MASK)
+PUB Minutes{}: curr_min
+' Get current minute
+    return bcd2int(_mins & core#MINUTES_MASK)
 
-PUB Month(mon): curr_month
-' Set month
-'   Valid values: 1..12
-'   Any other value returns the current month
-    case mon
-        1..12:
-            mon := int2bcd(mon)
-            writereg(core#MONTH, 1, @mon)
-        other:
-            return bcd2int(_months & core#MONTH_MASK)
+PUB Month{}: curr_month
+' Get current month
+    return bcd2int(_months & core#MONTH_MASK)
 
 PUB OscEnabled(state): curr_state
 ' Enable the on-chip oscillator
@@ -347,16 +317,86 @@ PUB Reset{} | tmp
     tmp &= core#OSF_MASK                        ' turn off the
     writereg(core#CTRL_STAT, 1, @tmp)           '   "oscillator-stopped" flag
 
-PUB Seconds(second): curr_sec
+PUB Seconds{}: curr_sec
+' Get current second
+    return bcd2int(_secs & core#SECONDS_MASK)
+
+PUB SetDate(d)
+' Set day of month
+'   Valid values: 1..31
+'   Any other value is ignored
+    case d
+        1..31:
+            d := int2bcd(d)
+            writereg(core#DATE, 1, @d)
+        other:
+            return
+
+PUB SetHours(h)
+' Set hours
+'   Valid values: 0..23
+'   Any other value is ignored
+    case h
+        0..23:
+            h := int2bcd(h)
+            writereg(core#HOURS, 1, @h)
+        other:
+            return
+
+PUB SetMinutes(m)
+' Set minutes
+'   Valid values: 0..59
+'   Any other value is ignored
+    case m
+        0..59:
+            m := int2bcd(m)
+            writereg(core#MINUTES, 1, @m)
+        other:
+            return
+
+PUB SetMonth(m)
+' Set month
+'   Valid values: 1..12
+'   Any other value is ignored
+    case m
+        1..12:
+            m := int2bcd(m)
+            writereg(core#MONTH, 1, @m)
+        other:
+            return
+
+PUB SetSeconds(s)
 ' Set seconds
 '   Valid values: 0..59
-'   Any other value returns the current second
-    case second
+'   Any other value is ignored
+    case s
         0..59:
-            second := int2bcd(second)
-            writereg(core#SECONDS, 1, @second)
+            s := int2bcd(s)
+            writereg(core#SECONDS, 1, @s)
         other:
-            return bcd2int(_secs & core#SECONDS_MASK)
+            return
+
+PUB SetWeekday(w)
+' Set day of week
+'   Valid values: 1..7
+'   Any other value is ignored
+    case w
+        1..7:
+            w := int2bcd(w-1)
+            writereg(core#DAY, 1, @w)
+        other:
+            return
+
+PUB SetYear(y)
+' Set 2-digit year
+'   Valid values: 0..99
+'   Any other value is ignored
+    case y
+        0..99:
+            y := int2bcd(y)
+            writereg(core#YEAR, 1, @y)
+        other:
+            return
 
 PUB TempData{}: temp
 ' Temperature ADC data
@@ -394,27 +434,13 @@ PUB TempScale(scale): curr_scl
         other:
             return _temp_scale
 
-PUB Weekday(wkday): curr_wkday
-' Set day of week
-'   Valid values: 1..7
-'   Any other value returns the current day of week
-    case wkday
-        1..7:
-            wkday := int2bcd(wkday-1)
-            writereg(core#DAY, 1, @wkday)
-        other:
-            return bcd2int(_wkdays & core#DAY_MASK) + 1
+PUB Weekday{}: curr_wkday
+' Get current week day
+    return bcd2int(_wkdays & core#DAY_MASK) + 1
 
-PUB Year(yr): curr_yr
-' Set 2-digit year
-'   Valid values: 0..99
-'   Any other value returns the current year
-    case yr
-        0..99:
-            yr := int2bcd(yr)
-            writereg(core#YEAR, 1, @yr)
-        other:
-            return bcd2int(_years & core#YEAR_MASK)
+PUB Year{}: curr_yr
+' Get current 2-digit year
+    return bcd2int(_years & core#YEAR_MASK)
 
 PRI bcd2int(bcd): int
 ' Convert BCD (Binary Coded Decimal) to integer

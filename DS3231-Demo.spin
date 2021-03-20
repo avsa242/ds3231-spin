@@ -3,9 +3,9 @@
     Filename: DS3231-Demo.spin
     Author: Jesse Burt
     Description: Demo of the DS3231 driver
-    Copyright (c) 2020
+    Copyright (c) 2021
     Started Nov 17, 2020
-    Updated Nov 19, 2020
+    Updated Mar 20, 2021
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -36,41 +36,42 @@ OBJ
     int     : "string.integer"
     rtc     : "time.rtc.ds3231.i2c"
 
-PUB Main{} | wkday, month, day, yr
+PUB Main{} | wkday, month, date, yr
 
     setup{}
 
 ' Uncomment below to set date/time
 '                hh, mm, ss, MMM, DD, WKDAY, YY
-'    setdatetime(14, 03, 00, NOV, 19, THU, 20)
+'    setdatetime(19, 28, 00, MAR, 20, SAT, 21)
 
     repeat{}
         rtc.pollrtc{}                       ' read RTC into hub RAM
-        wkday := @wkday_name[(rtc.weekday(-2) - 1) * 4]   ' Pull strings from
-        month := @month_name[(rtc.month(-2) - 1) * 4]       ' DAT table below
-        day := int.deczeroed(rtc.day(-2), 2)
-        yr := rtc.year(-2)
+        ' get weekday and month name strings from DAT table below
+        wkday := @wkday_name[(rtc.weekday{} - 1) * 4]
+        month := @month_name[(rtc.month{} - 1) * 4]
+        date := int.deczeroed(rtc.date{}, 2)
+        yr := rtc.year{}
 
         ser.position(0, 3)
         ser.str(wkday)
-        ser.printf(string(" %s %s 20%d "), day, month, yr, 0, 0, 0)
+        ser.printf(string(" %s %s 20%d "), date, month, yr, 0, 0, 0)
 
-        ser.str(int.deczeroed(rtc.hours(-2), 2))        ' Discrete statements
-        ser.char(":")                                   ' due to a bug in
-        ser.str(int.deczeroed(rtc.minutes(-2), 2))      ' string.integer
+        ser.str(int.deczeroed(rtc.hours{}, 2))  ' Discrete statements
+        ser.char(":")                           ' due to a bug in
+        ser.str(int.deczeroed(rtc.minutes{}, 2))' string.integer
         ser.char(":")
-        ser.str(int.deczeroed(rtc.seconds(-2), 2))
+        ser.str(int.deczeroed(rtc.seconds{}, 2))
 
 PUB SetDateTime(h, m, s, mmm, dd, wkday, yy)
 
-    rtc.hours(h)                                ' 00..23
-    rtc.minutes(m)                              ' 00..59
-    rtc.seconds(s)                              ' 00..59
+    rtc.sethours(h)                             ' 00..23
+    rtc.setminutes(m)                           ' 00..59
+    rtc.setseconds(s)                           ' 00..59
 
-    rtc.month(mmm)                              ' 01..12
-    rtc.day(dd)                                 ' 01..31
-    rtc.weekday(wkday)                          ' 01..07
-    rtc.year(yy)                                ' 00..99
+    rtc.setmonth(mmm)                           ' 01..12
+    rtc.setdate(dd)                             ' 01..31
+    rtc.setweekday(wkday)                       ' 01..07
+    rtc.setyear(yy)                             ' 00..99
 
 PUB Setup{}
 
