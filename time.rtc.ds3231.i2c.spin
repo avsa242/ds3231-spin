@@ -364,8 +364,8 @@ PUB TempData{}: temp
 
 PUB TempDataReady{}: flag
 ' Flag indicating temperature data ready
-    readreg(core#CONTROL, 1, @flag)
-    return ((flag >> core#CONV) & 1) == 0
+    readreg(core#CTRL_STAT, 1, @flag)
+    return ((flag >> core#BSY) & 1) == 0
 
 PUB Temperature{}: temp_cal
 ' Read temperature
@@ -439,19 +439,21 @@ PRI int2bcd(int): bcd
 PRI readReg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt, tmp
 ' Read nr_bytes from device into ptr_buff
     case reg_nr
-        core#SECONDS..core#AGE_OFFS:
-            cmd_pkt.byte[0] := SLAVE_WR
-            cmd_pkt.byte[1] := reg_nr
-            i2c.start{}
-            i2c.wrblock_lsbf(@cmd_pkt, 2)
-            i2c.start{}
-            i2c.write(SLAVE_RD)
-            i2c.rdblock_lsbf(ptr_buff, nr_bytes, i2c#NAK)
-            i2c.stop{}
-        core#TEMP_MSB:
-            i2c.rdblock_msbf(ptr_buff, nr_bytes, i2c#NAK)
+        core#SECONDS..core#TEMP_MSB:
         other:
             return
+
+    cmd_pkt.byte[0] := SLAVE_WR
+    cmd_pkt.byte[1] := reg_nr
+    i2c.start{}
+    i2c.wrblock_lsbf(@cmd_pkt, 2)
+    i2c.start{}
+    i2c.write(SLAVE_RD)
+    if reg_nr == core#TEMP_MSB
+        i2c.rdblock_msbf(ptr_buff, nr_bytes, i2c#NAK)
+    else
+        i2c.rdblock_lsbf(ptr_buff, nr_bytes, i2c#NAK)
+    i2c.stop{}
 
 PRI writeReg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt, tmp
 ' Write nr_bytes to device from ptr_buff
