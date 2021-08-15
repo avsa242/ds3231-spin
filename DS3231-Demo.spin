@@ -82,11 +82,11 @@ PUB Setup{}
     time.msleep(30)
     ser.clear{}
     ser.strln(string("Serial terminal started"))
+
+    if rtc.startx(I2C_SCL, I2C_SDA, I2C_HZ)
 #ifdef DS3231_SPIN
-    if rtc.startx(I2C_SCL, I2C_SDA)
         ser.strln(string("DS3231 driver started (I2C-SPIN)"))
 #elseifdef DS3231_PASM
-    if rtc.startx(I2C_SCL, I2C_SDA, I2C_HZ)
         ser.strln(string("DS3231 driver started (I2C-PASM)"))
 #endif
     else

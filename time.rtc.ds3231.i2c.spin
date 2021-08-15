@@ -56,24 +56,13 @@ PUB Null{}
 
 PUB Start{}: status
 ' Start using "standard" Propeller I2C pins and 100kHz
-#ifdef DS3231_SPIN
-    return startx(DEF_SCL, DEF_SDA)
-#elseifdef DS3231_PASM
     return startx(DEF_SCL, DEF_SDA, DEF_HZ)
-#endif
 
-#ifdef DS3231_SPIN
-PUB Startx(SCL_PIN, SDA_PIN): status
-' Start using custom I2C pins and bus frequency
-    if lookdown(SCL_PIN: 0..31) and lookdown(SDA_PIN: 0..31)
-        if (status := i2c.init(SCL_PIN, SDA_PIN))
-#elseifdef DS3231_PASM
 PUB Startx(SCL_PIN, SDA_PIN, I2C_HZ): status
 ' Start using custom I2C pins and bus frequency
     if lookdown(SCL_PIN: 0..31) and lookdown(SDA_PIN: 0..31) and {
 }   I2C_HZ =< core#I2C_MAX_FREQ
         if (status := i2c.init(SCL_PIN, SDA_PIN, I2C_HZ))
-#endif
             time.usleep(core#TPOR)          ' wait for device startup
             if i2c.present(SLAVE_WR)        ' test device bus presence
                 return status
