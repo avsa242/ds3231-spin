@@ -429,7 +429,7 @@ PUB Temperature{}: temp_cal
 ' Read temperature
 '   Returns: Temperature in hundredths of a degree, in chosen scale
 '   Example: 2075 == 20.75C
-    return calctemp(tempdata{})
+    return tempword2deg(tempdata{})
 
 PUB TempMeasure{} | tmp, meas
 ' Perform a manual temperature measurement
@@ -452,6 +452,18 @@ PUB TempScale(scale): curr_scl
         other:
             return _temp_scale
 
+PUB TempWord2Deg(temp_word): temp
+' Convert temperature ADC word to temperature
+'   Returns: temperature, in hundredths of a degree, in chosen scale
+    temp := (temp_word >> 6) * 0_25
+    case _temp_scale
+        C:
+            return
+        F:
+            return ((temp * 90) / 50) + 32_00
+        other:
+            return FALSE
+
 PUB Weekday{}: curr_wkday
 ' Get current week day
     return bcd2int(_wkdays & core#DAY_MASK) + 1
@@ -463,18 +475,6 @@ PUB Year{}: curr_yr
 PRI bcd2int(bcd): int
 ' Convert BCD (Binary Coded Decimal) to integer
     return ((bcd >> 4) * 10) + (bcd // 16)
-
-PRI calcTemp(temp_word): temp_cal
-' Calculate temperature, using temperature word
-'   Returns: temperature, in hundredths of a degree, in chosen scale
-    temp_cal := (temp_word >> 6) * 0_25
-    case _temp_scale
-        C:
-            return
-        F:
-            return ((temp_cal * 90) / 50) + 32_00
-        other:
-            return FALSE
 
 PRI int2bcd(int): bcd
 ' Convert integer to BCD (Binary Coded Decimal)
