@@ -5,7 +5,7 @@
     Description: Demo of the DS3231 driver
     Copyright (c) 2021
     Started Nov 17, 2020
-    Updated Mar 20, 2021
+    Updated Aug 15, 2021
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -82,8 +82,6 @@ PUB Setup()
         ser.strln(string("DS3231 driver started"))
     else
         ser.strln(string("DS3231 driver failed to start - halting"))
-        rtc.stop()
-        waitms(50)
         repeat 
 
 DAT

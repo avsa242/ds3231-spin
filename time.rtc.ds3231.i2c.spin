@@ -5,7 +5,7 @@
     Description: Driver for the DS3231 Real-Time Clock
     Copyright (c) 2021
     Started Nov 17, 2020
-    Updated Jul 20, 2021
+    Updated Aug 15, 2021
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -41,7 +41,13 @@ VAR
 
 OBJ
 
-    i2c : "com.i2c"
+#ifdef DS3231_SPIN
+    i2c : "tiny.com.i2c"                        ' SPIN I2C engine (~30kHz)
+#elseifdef DS3231_PASM
+    i2c : "com.i2c"                             ' PASM I2C engine (~400kHz)
+#else
+#error "One of DS3231_SPIN or DS3231_PASM must be defined"
+#endif
     core: "core.con.ds3231"
     time: "time"
 
@@ -50,13 +56,24 @@ PUB Null{}
 
 PUB Start{}: status
 ' Start using "standard" Propeller I2C pins and 100kHz
+#ifdef DS3231_SPIN
+    return startx(DEF_SCL, DEF_SDA)
+#elseifdef DS3231_PASM
     return startx(DEF_SCL, DEF_SDA, DEF_HZ)
+#endif
 
+#ifdef DS3231_SPIN
+PUB Startx(SCL_PIN, SDA_PIN): status
+' Start using custom I2C pins and bus frequency
+    if lookdown(SCL_PIN: 0..31) and lookdown(SDA_PIN: 0..31)
+        if (status := i2c.init(SCL_PIN, SDA_PIN))
+#elseifdef DS3231_PASM
 PUB Startx(SCL_PIN, SDA_PIN, I2C_HZ): status
 ' Start using custom I2C pins and bus frequency
     if lookdown(SCL_PIN: 0..31) and lookdown(SDA_PIN: 0..31) and {
 }   I2C_HZ =< core#I2C_MAX_FREQ
         if (status := i2c.init(SCL_PIN, SDA_PIN, I2C_HZ))
+#endif
             time.usleep(core#TPOR)          ' wait for device startup
             if i2c.present(SLAVE_WR)        ' test device bus presence
                 return status

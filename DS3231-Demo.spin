@@ -5,10 +5,13 @@
     Description: Demo of the DS3231 driver
     Copyright (c) 2021
     Started Nov 17, 2020
-    Updated Mar 20, 2021
+    Updated Aug 15, 2021
     See end of file for terms of use.
     --------------------------------------------
 }
+' Uncomment one of the lines below to choose the SPIN or PASM-based I2C engine
+#define DS3231_SPIN
+'#define DS3231_PASM
 
 CON
 
@@ -79,13 +82,16 @@ PUB Setup{}
     time.msleep(30)
     ser.clear{}
     ser.strln(string("Serial terminal started"))
+#ifdef DS3231_SPIN
+    if rtc.startx(I2C_SCL, I2C_SDA)
+        ser.strln(string("DS3231 driver started (I2C-SPIN)"))
+#elseifdef DS3231_PASM
     if rtc.startx(I2C_SCL, I2C_SDA, I2C_HZ)
-        ser.strln(string("DS3231 driver started"))
+        ser.strln(string("DS3231 driver started (I2C-PASM)"))
+#endif
     else
         ser.strln(string("DS3231 driver failed to start - halting"))
-        rtc.stop{}
-        time.msleep(50)
-        ser.stop{}
+        repeat
 
 DAT
 ' Tables for mapping numbers to weekday and month names
