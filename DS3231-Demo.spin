@@ -3,15 +3,12 @@
     Filename: DS3231-Demo.spin
     Author: Jesse Burt
     Description: Demo of the DS3231 driver
-    Copyright (c) 2021
+    Copyright (c) 2022
     Started Nov 17, 2020
-    Updated Aug 15, 2021
+    Updated Feb 3, 2022
     See end of file for terms of use.
     --------------------------------------------
 }
-' Uncomment one of the lines below to choose the SPIN or PASM-based I2C engine
-#define DS3231_SPIN
-'#define DS3231_PASM
 
 CON
 
@@ -37,7 +34,7 @@ OBJ
     ser     : "com.serial.terminal.ansi"
     time    : "time"
     int     : "string.integer"
-    rtc     : "time.rtc.ds3231.i2c"
+    rtc     : "time.rtc.ds3231"
 
 PUB Main{} | wkday, month, date, yr
 
