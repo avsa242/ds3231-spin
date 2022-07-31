@@ -1,15 +1,16 @@
 {
     --------------------------------------------
-    Filename: time.rtc.ds3231.i2c.spin2
+    Filename: time.rtc.ds3231.spin2
     Author: Jesse Burt
     Description: Driver for the DS3231 Real-Time Clock
         (P2 version)
-    Copyright (c) 2021
+    Copyright (c) 2022
     Started Mar 20, 2021
-    Updated Aug 15, 2021
+    Updated Jul 31, 2022
     See end of file for terms of use.
     --------------------------------------------
 }
+#include "sensor.temp.common.spin2h"
 
 CON
 
@@ -35,14 +36,12 @@ VAR
 
     byte _secs, _mins, _hours                   ' Vars to hold time
     byte _wkdays, _days, _months, _years        ' Order is important!
-    byte _temp_scale
     byte _clkdata_ok
 
 OBJ
 
     i2c : "com.i2c"
     core: "core.con.ds3231.spin"
-    time: "time"
 
 PUB Null()
 ' This is not a top-level object
@@ -403,12 +402,6 @@ PUB TempDataReady(): flag
     readreg(core.CTRL_STAT, 1, @flag)
     return ((flag >> core.BSY) & 1) == 0
 
-PUB Temperature(): temp_cal
-' Read temperature
-'   Returns: Temperature in hundredths of a degree, in chosen scale
-'   Example: 2075 == 20.75C
-    return tempword2deg(tempdata())
-
 PUB TempMeasure() | tmp, meas
 ' Perform a manual temperature measurement
 '   NOTE: The RTC automatically performs temperature measurements
@@ -417,18 +410,6 @@ PUB TempMeasure() | tmp, meas
     tmp |= (1 << core.CONV)                     ' set bit to trigger measurement
 
     writereg(core.CONTROL, 1, @tmp)
-
-PUB TempScale(scale=-2): curr_scl
-' Set temperature scale used by Temperature method
-'   Valid values:
-'      *C (0): Celsius
-'       F (1): Fahrenheit
-'   Any other value returns the current setting
-    case scale
-        C, F:
-            _temp_scale := scale
-        other:
-            return _temp_scale
 
 PUB TempWord2Deg(temp_word): temp
 ' Convert temperature ADC word to temperature
