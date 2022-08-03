@@ -3,9 +3,10 @@
     Filename: DS3231-Demo.spin
     Author: Jesse Burt
     Description: Demo of the DS3231 driver
+        * Time/Date output
     Copyright (c) 2022
-    Started Nov 17, 2020
-    Updated Feb 3, 2022
+    Started Sep 6, 2020
+    Updated Aug 3, 2022
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -21,7 +22,7 @@ CON
 
     I2C_SCL     = 28
     I2C_SDA     = 29
-    I2C_HZ      = 400_000
+    I2C_FREQ    = 400_000
 ' --
 
 ' Named constants that can be used in place of numerical month, or weekday
@@ -33,106 +34,47 @@ OBJ
     cfg     : "core.con.boardcfg.flip"
     ser     : "com.serial.terminal.ansi"
     time    : "time"
-    int     : "string.integer"
     rtc     : "time.rtc.ds3231"
 
-PUB Main{} | wkday, month, date, yr
-
-    setup{}
-
-' Uncomment below to set date/time
-'                hh, mm, ss, MMM, DD, WKDAY, YY
-'    setdatetime(19, 28, 00, MAR, 20, SAT, 21)
-
-    repeat
-        rtc.pollrtc{}                       ' read RTC into hub RAM
-        ' get weekday and month name strings from DAT table below
-        wkday := @wkday_name[(rtc.weekday{} - 1) * 4]
-        month := @month_name[(rtc.month{} - 1) * 4]
-        date := int.deczeroed(rtc.date{}, 2)
-        yr := rtc.year{}
-
-        ser.position(0, 3)
-        ser.str(wkday)
-        ser.printf(string(" %s %s 20%d "), date, month, yr, 0, 0, 0)
-
-        ser.str(int.deczeroed(rtc.hours{}, 2))  ' Discrete statements
-        ser.char(":")                           ' due to a bug in
-        ser.str(int.deczeroed(rtc.minutes{}, 2))' string.integer
-        ser.char(":")
-        ser.str(int.deczeroed(rtc.seconds{}, 2))
-
-PUB SetDateTime(h, m, s, mmm, dd, wkday, yy)
-
-    rtc.sethours(h)                             ' 00..23
-    rtc.setminutes(m)                           ' 00..59
-    rtc.setseconds(s)                           ' 00..59
-
-    rtc.setmonth(mmm)                           ' 01..12
-    rtc.setdate(dd)                             ' 01..31
-    rtc.setweekday(wkday)                       ' 01..07
-    rtc.setyear(yy)                             ' 00..99
-
-PUB Setup{}
+PUB main{}
 
     ser.start(SER_BAUD)
     time.msleep(30)
     ser.clear{}
     ser.strln(string("Serial terminal started"))
 
-    if rtc.startx(I2C_SCL, I2C_SDA, I2C_HZ)
-#ifdef DS3231_SPIN
-        ser.strln(string("DS3231 driver started (I2C-SPIN)"))
-#elseifdef DS3231_PASM
-        ser.strln(string("DS3231 driver started (I2C-PASM)"))
-#endif
+    if rtc.startx(I2C_SCL, I2C_SDA, I2C_FREQ)
+        ser.strln(string("DS3231 driver started"))
     else
         ser.strln(string("DS3231 driver failed to start - halting"))
         repeat
 
-DAT
-' Tables for mapping numbers to weekday and month names
-    wkday_name
-            byte    "Sun", 0                    ' 1
-            byte    "Mon", 0                    ' 2
-            byte    "Tue", 0                    ' 3
-            byte    "Wed", 0                    ' 4
-            byte    "Thu", 0                    ' 5
-            byte    "Fri", 0                    ' 6
-            byte    "Sat", 0                    ' 7
+' Uncomment below to set date/time
+'   (only needs to be done once as long as RTC remains powered afterwards)
+'                hh, mm, ss, MMM, DD, WKDAY, YY
+'    set_date_time(16, 39, 00, AUG, 03, WED, 22)
 
-    month_name
-            byte    "Jan", 0                    ' 1
-            byte    "Feb", 0
-            byte    "Mar", 0
-            byte    "Apr", 0
-            byte    "May", 0
-            byte    "Jun", 0
-            byte    "Jul", 0
-            byte    "Aug", 0
-            byte    "Sep", 0
-            byte    "Oct", 0
-            byte    "Nov", 0
-            byte    "Dec", 0                    ' 12
+    demo{}
+
+#include "timedemo.common.spinh"
 
 DAT
 {
-    --------------------------------------------------------------------------------------------------------
-    TERMS OF USE: MIT License
+Copyright 2022 Jesse Burt
 
-    Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
-    associated documentation files (the "Software"), to deal in the Software without restriction, including
-    without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-    copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the
-    following conditions:
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
+associated documentation files (the "Software"), to deal in the Software without restriction,
+including without limitation the rights to use, copy, modify, merge, publish, distribute,
+sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-    The above copyright notice and this permission notice shall be included in all copies or substantial
-    portions of the Software.
+The above copyright notice and this permission notice shall be included in all copies or
+substantial portions of the Software.
 
-    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
-    LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-    IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-    WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-    SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-    --------------------------------------------------------------------------------------------------------
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT
+NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT
+OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 }
+
