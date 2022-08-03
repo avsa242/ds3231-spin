@@ -5,7 +5,7 @@
     Description: Driver for the DS3231 Real-Time Clock
     Copyright (c) 2022
     Started Nov 17, 2020
-    Updated Jul 31, 2022
+    Updated Aug 3, 2022
     See end of file for terms of use.
     --------------------------------------------
 }
