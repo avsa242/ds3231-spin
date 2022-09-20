@@ -5,7 +5,7 @@
     Description: Driver for the DS3231 Real-Time Clock
     Copyright (c) 2022
     Started Nov 17, 2020
-    Updated Aug 3, 2022
+    Updated Sep 20, 2022
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -418,7 +418,7 @@ PUB tempword2deg(temp_word): temp
         other:
             return FALSE
 
-PRI readReg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt, tmp
+PRI readreg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt, tmp
 ' Read nr_bytes from device into ptr_buff
     case reg_nr
         core#SECONDS..core#TEMP_MSB:
@@ -437,7 +437,7 @@ PRI readReg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt, tmp
         i2c.rdblock_lsbf(ptr_buff, nr_bytes, i2c#NAK)
     i2c.stop{}
 
-PRI writeReg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt, tmp
+PRI writereg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt, tmp
 ' Write nr_bytes to device from ptr_buff
     case reg_nr
         core#SECONDS..core#AGE_OFFS:
