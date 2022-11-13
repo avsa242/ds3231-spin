@@ -5,7 +5,7 @@
     Description: Driver for the DS3231 Real-Time Clock
     Copyright (c) 2022
     Started Nov 17, 2020
-    Updated Oct 16, 2022
+    Updated Nov 13, 2022
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -222,7 +222,7 @@ PUB clkout_freq(freq): curr_freq
     freq := ((curr_freq & core#RS_MASK) | freq)
     writereg(core#CONTROL, 1, @freq)
 
-PUB int_clr(mask) | tmp
+PUB int_clear(mask) | tmp
 ' Clear asserted interrupts
     tmp := 0
     readreg(core#CTRL_STAT, 1, @tmp)
