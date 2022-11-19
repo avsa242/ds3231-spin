@@ -10,6 +10,8 @@ This is a P8X32A/Propeller, P2X8C4M64P/Propeller 2 driver object for the DS3231 
 * I2C connection at up to 400kHz
 * Read and set days, hours, months, minutes, seconds, weekday, year (individually)
 * Read on-chip temperature sensor
+* Get/set alarm date/times, repetition
+* Get/set oscillator aging offset
 
 ## Requirements
 
@@ -25,7 +27,8 @@ P2/SPIN2:
 
 ## Programming interface
 
-See the [time API](https://github.com/avsa242/spin-standard-library/tree/testing/api/time.md)
+See the [spin1 time API](https://github.com/avsa242/spin-standard-library/tree/testing/api/time.md)
+or [spin2 time API](https://github.com/avsa242/p2-spin-standard-library/tree/testing/api/time.md)
 
 ## Compiler Compatibility
 
