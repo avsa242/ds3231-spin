@@ -10,7 +10,7 @@
 }
 
 #include "time.rtc.common.spin2h"               ' use code common to all RTC
-#include "sensor.temp.common.spin2h"                '   and temperature sensor drivers
+#include "sensor.temp.common.spin2h"            '   and temperature sensor drivers
 
 CON
 

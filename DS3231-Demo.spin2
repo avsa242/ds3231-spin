@@ -1,7 +1,7 @@
 {
 ----------------------------------------------------------------------------------------------------
-    Filename:       PCF8563-Demo.spin2
-    Description:    Demo of the PCF8563 driver
+    Filename:       DS3231-Demo.spin2
+    Description:    Demo of the DS3231 driver
         * Time/Date output
     Author:         Jesse Burt
     Started:        Mar 20, 2021
@@ -20,7 +20,7 @@ OBJ
 
     time:   "time"
     ser:    "com.serial.terminal.ansi" | SER_BAUD=2_000_000
-    rtc:    "time.rtc.pcf8563" | SCL=0, SDA=1, I2C_FREQ=100_000
+    rtc:    "time.rtc.ds3231" | SCL=0, SDA=1, I2C_FREQ=100_000
 
 
 PUB main() | wkday, month, date, yr
@@ -67,9 +67,9 @@ PUB setup()
     ser.strln(@"Serial terminal started")
 
     if ( rtc.start() )
-        ser.strln(@"PCF8563 driver started")
+        ser.strln(@"DS3231 driver started")
     else
-        ser.strln(@"PCF8563 driver failed to start - halting")
+        ser.strln(@"DS3231 driver failed to start - halting")
         repeat
 
 
