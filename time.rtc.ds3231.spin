@@ -4,8 +4,8 @@
     Description:    Driver for the DS3231 Real-Time Clock
     Author:         Jesse Burt
     Started:        Nov 17, 2020
-    Updated:        Oct 17, 2024
-    Copyright (c) 2024 - See end of file for terms of use.
+    Updated:        Apr 29, 2025
+    Copyright (c) 2025 - See end of file for terms of use.
 ----------------------------------------------------------------------------------------------------
 }
 
@@ -348,21 +348,21 @@ PUB set_seconds(s)
 ' Set seconds
 '   Valid values: 0..59
 '   Any other value is ignored
-    writereg(core.SECONDS, 1, int2bcd(0 #> s <# 59) )
+    writereg(core.SECONDS, int2bcd(0 #> s <# 59) )
 
 
 PUB set_weekday(w)
 ' Set day of week
 '   Valid values: 1..7
 '   Any other value is ignored
-    writereg(core.DAY, 1, int2bcd(1 #> (w-1) <# 7) )
+    writereg(core.DAY, int2bcd(1 #> (w-1) <# 7) )
 
 
 PUB set_year(y)
 ' Set 2-digit year
 '   Valid values: 0..99
 '   Any other value is ignored
-    writereg(core.YEAR, 1, int2bcd(0 #> y <# 99) )
+    writereg(core.YEAR, int2bcd(0 #> y <# 99) )
 
 
 PUB temp_data(): t
@@ -410,7 +410,7 @@ PRI readreg(reg_nr, nr_bytes=1): v | cmd_pkt
     i2c.stop()
 
 
-PRI writereg(reg_nr, val, nr_bytes=1) | cmd_pkt
+PRI writereg(reg_nr, val) | cmd_pkt
 ' Write nr_bytes to device from ptr_buff
     case reg_nr
         core.SECONDS..core.AGE_OFFS:
@@ -418,7 +418,7 @@ PRI writereg(reg_nr, val, nr_bytes=1) | cmd_pkt
             cmd_pkt.byte[1] := reg_nr
             i2c.start()
             i2c.wrblock_lsbf(@cmd_pkt, 2)
-            i2c.wrblock_lsbf(@val, nr_bytes)
+            i2c.wrblock_lsbf(@val, 1)
             i2c.stop()
         other:
             return
@@ -426,7 +426,7 @@ PRI writereg(reg_nr, val, nr_bytes=1) | cmd_pkt
 
 DAT
 {
-Copyright 2024 Jesse Burt
+Copyright 2025 Jesse Burt
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
 associated documentation files (the "Software"), to deal in the Software without restriction,
